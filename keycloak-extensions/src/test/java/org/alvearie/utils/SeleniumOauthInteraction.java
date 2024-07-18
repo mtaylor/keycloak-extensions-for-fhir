@@ -5,23 +5,6 @@ SPDX-License-Identifier: Apache-2.0
  */
 package org.alvearie.utils;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.junit.Assert.fail;
-
-import java.net.URI;
-import java.net.URLDecoder;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.Response;
-
 import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.hc.core5.net.URLEncodedUtils;
 import org.openqa.selenium.By;
@@ -35,7 +18,23 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.Response;
+import java.net.URI;
+import java.net.URLDecoder;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.Assert.fail;
 
 public class SeleniumOauthInteraction {
 
@@ -55,9 +54,8 @@ public class SeleniumOauthInteraction {
 		oauthAuthUrl = oauth_auth_url;
 		oauthTokenUrl = oauth_token_url;
 
-		WebDriverManager.chromedriver().setup();
 		ChromeOptions options = new ChromeOptions();
-		options.setHeadless(true);
+		options.addArguments("--headless=new");
 		driver = new ChromeDriver(options);
 	}
 
@@ -90,14 +88,14 @@ public class SeleniumOauthInteraction {
 			// launch Firefox and direct it to the Base URL
 			driver.get(oauthAuthUrl + "?" + queryString);
 
-			WebElement dynamicElement = (new WebDriverWait(driver, 30))
+            WebElement dynamicElement = (new WebDriverWait(driver, Duration.of(30, ChronoUnit.SECONDS)))
 					.until(ExpectedConditions.presenceOfElementLocated(By.id("username")));
 			dynamicElement.sendKeys(user);
 
 			driver.findElement(By.id("password")).sendKeys(pass);
 			driver.findElement(By.id("kc-login")).click();
 
-			Boolean loginButtonDisappeared = (new WebDriverWait(driver, 5, 200))
+            Boolean loginButtonDisappeared = (new WebDriverWait(driver, Duration.of(5, ChronoUnit.SECONDS), Duration.of(200, ChronoUnit.MILLIS)))
 					.until(ExpectedConditions.invisibilityOfElementLocated(By.id("kc-login")));
 			LOGGER.debug("Login button is visible?? " + !loginButtonDisappeared);
 
@@ -117,8 +115,8 @@ public class SeleniumOauthInteraction {
 			//   input id=<patient_id> (one per patient that the user has access to)
 			//   input id=submit
 			try {
-				// wait up to 3 seconds - poll for element every 200 ms
-				new WebDriverWait(driver, 5, 200)
+				// wait up to 5 seconds - poll for element every 200 ms
+                new WebDriverWait(driver, Duration.of(5, ChronoUnit.SECONDS), Duration.of(200, ChronoUnit.MILLIS))
 				.until(ExpectedConditions.presenceOfElementLocated(By.id("patient-selection")));
 
 				// simulate choosing the patient that has an id of "PatientA"
@@ -138,7 +136,7 @@ public class SeleniumOauthInteraction {
 			//   input kd=kc-login YES
 			try {
 				// either the button is found or a TimeoutException is generated
-				WebElement grantAccessButton = (new WebDriverWait(driver, 1,200))
+                WebElement grantAccessButton = (new WebDriverWait(driver, Duration.of(1, ChronoUnit.SECONDS),Duration.of(200, ChronoUnit.MILLIS)))
 						.until(ExpectedConditions.presenceOfElementLocated(By.id("kc-login")));
 
 				grantAccessButton.click();
