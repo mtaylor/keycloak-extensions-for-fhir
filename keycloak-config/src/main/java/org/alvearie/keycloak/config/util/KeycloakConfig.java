@@ -205,7 +205,6 @@ public class KeycloakConfig {
 	 * Loads the specified file as a JSON file and returns a PropertyGroup containing the contents of the JSON file as
 	 * the root property group.
 	 *
-	 * @param filename
 	 *            the name of the JSON file to be loaded
 	 */
 	private PropertyGroup loadConfiguration() {

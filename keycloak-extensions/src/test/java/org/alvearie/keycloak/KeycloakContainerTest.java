@@ -39,8 +39,8 @@ import okhttp3.mockwebserver.RecordedRequest;
 public class KeycloakContainerTest {
 	private static final String MASTER_REALM = "master";
 	private static final String ADMIN_CLIENT_ID = "admin-cli";
-	private static final String USERNAME = "a";
-	private static final String PASSWORD = "a";
+	private static final String USERNAME = "usera";
+	private static final String PASSWORD = "passworda";
 	private static final String KC_CLIENT = "test";
 	private static final String REDIRECT_URI = "http://localhost";
 	private static final String AUTH_ENDPOINT = "/realms/test/protocol/openid-connect/auth";
@@ -60,11 +60,15 @@ public class KeycloakContainerTest {
 	// per the testcontainers doc, the contain should be started in a static block before JUnit starts up
 	private static KeycloakContainer keycloak;
 	static {
-		keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:18.0.0").withProviderClassesFrom("target/classes")
+		keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:24.0.5")
+				.withProviderClassesFrom("target/classes")
 				.withFileSystemBind("target/dependency", "/opt/keycloak/providers/");
-		keycloak.withEnv("DB_VENDOR", "H2");
-		// Uncomment this to keep the container running after the tests complete
-		//        keycloak.withReuse(true);
+				//.withEnv("DB_VENDOR", "H2");
+				//keycloak.withEnv("KC_DB", "dev-mem");
+				//keycloak.withEnv("KC_LOG_LEVEL", "DEBUG");
+		        // Uncomment this to keep the container running after the tests complete
+		        //keycloak.withReuse(true);
+				keycloak.withDebugFixedPort(5050, false);
 		keycloak.start();
 	}
 

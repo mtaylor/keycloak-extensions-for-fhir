@@ -128,17 +128,17 @@
 			}
 		},
 		"users": {
-			"a": {
+			"usera": {
 				"enabled": true,
-				"password": "a",
+				"password": "passworda",
 				"passwordTemporary": false,
 				"attributes": {
 					"resourceId": ["PatientA PatientB PatientMissing"]
 				}
 			},
-			"b": {
+			"userb": {
 				"enabled": true,
-				"password": "b",
+				"password": "passwordb",
 				"passwordTemporary": false,
 				"attributes": {
 					"resourceId": ["PatientB"]

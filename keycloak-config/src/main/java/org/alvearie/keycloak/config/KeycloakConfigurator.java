@@ -5,18 +5,10 @@ SPDX-License-Identifier: Apache-2.0
  */
 package org.alvearie.keycloak.config;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status.Family;
-
+import jakarta.json.JsonObject;
+import jakarta.json.JsonString;
+import jakarta.json.JsonValue;
+import jakarta.ws.rs.core.Response;
 import org.alvearie.keycloak.config.util.KeycloakConfig;
 import org.alvearie.keycloak.config.util.PropertyGroup;
 import org.alvearie.keycloak.config.util.PropertyGroup.PropertyEntry;
@@ -43,10 +35,16 @@ import org.keycloak.representations.idm.IdentityProviderRepresentation;
 import org.keycloak.representations.idm.ProtocolMapperRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.keycloak.representations.userprofile.config.UPConfig;
 
-import jakarta.json.JsonObject;
-import jakarta.json.JsonString;
-import jakarta.json.JsonValue;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class KeycloakConfigurator {
 	private final Keycloak adminClient;
@@ -63,7 +61,8 @@ public class KeycloakConfigurator {
 	 */
 	public void initializeRealm(String realmName, PropertyGroup realmPg) throws Exception {
 		System.out.println("initializing realm: " + realmName);
-		// Create realm if it does not exist
+		// Create Realm if it does not exist
+
 		RealmsResource realms = adminClient.realms();
 		RealmRepresentation realm = getRealmByName(realms, realmName);
 		if (realm == null) {
@@ -186,6 +185,12 @@ public class KeycloakConfigurator {
 				}
 			}
 		}
+
+		// Enable Unmanaged Attributes on UserProfile (disabled by default in v24+)
+		UsersResource usersResource = realms.realm(realmName).users();
+		UPConfig upConfig = usersResource.userProfile().getConfiguration();
+		upConfig.setUnmanagedAttributePolicy(UPConfig.UnmanagedAttributePolicy.ENABLED);
+		usersResource.userProfile().update(upConfig);
 
 		// Initialize users
 		PropertyGroup usersPg = realmPg.getPropertyGroup(KeycloakConfig.PROP_USERS);
@@ -599,7 +604,7 @@ public class KeycloakConfigurator {
 
 			Response response = authMgmt.createFlow(authenticationFlow);
 
-			if (response.getStatusInfo().getFamily() == Family.SUCCESSFUL) {
+			if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
 				String path = response.getLocation().getPath();
 				String id = path.substring(path.lastIndexOf("/") + 1);
 				System.out.println("Created flow with id '" + id + "'");
@@ -744,7 +749,7 @@ public class KeycloakConfigurator {
 			authenticatorConfig.setAlias(configAlias);
 			Response response = authMgmt.newExecutionConfig(execution.getId(), authenticatorConfig);
 
-			if (response.getStatusInfo().getFamily() == Family.SUCCESSFUL) {
+			if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
 				String path = response.getLocation().getPath();
 				String id = path.substring(path.lastIndexOf("/") + 1);
 				System.out.println("Created authenticator config with id '" + id + "'");
@@ -914,12 +919,15 @@ public class KeycloakConfigurator {
 	 * @throws Exception an Exception
 	 */
 	void initializeUser(UsersResource users, GroupsResource groups, String userName, PropertyGroup userPg) throws Exception {
+
 		System.out.println("initializing user: " + userName);
-		// Create user if it does not exist
 		UserRepresentation user = getUserByName(users, userName);
 		if (user == null) {
 			user = new UserRepresentation();
 			user.setUsername(userName);
+			user.setEmail(userName + "@test.com");
+			user.setFirstName(userName);
+			user.setLastName(userName);
 			users.create(user);
 			user = getUserByName(users, userName);
 			if (user == null) {
@@ -1019,8 +1027,6 @@ public class KeycloakConfigurator {
 
 	/**
 	 * Gets the client by client ID.
-	 * @param adminClient the clients
-	 * @param clientName the client name
 	 * @return the client, or null if not found
 	 */
 	private ClientRepresentation getClientByClientId(ClientsResource clients, String clientId) {
@@ -1064,7 +1070,7 @@ public class KeycloakConfigurator {
 
 	/**
 	 * Gets the identity provider mapper by name.
-	 * @param identity provider the identity provider
+	 * @param identityProvider provider the identity provider
 	 * @param mapperName the mapper name
 	 * @return the identity provider mapper, or null if not found
 	 */

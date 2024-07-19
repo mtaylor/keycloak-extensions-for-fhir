@@ -76,7 +76,11 @@
        <artifactId>hapi-fhir-client</artifactId>
        <version>${hapi.fhir.version}</version>
      </dependency>
-    
+    <dependency>
+      <groupId>org.jboss.resteasy</groupId>
+      <artifactId>resteasy-core</artifactId>
+      <version>6.2.9.Final</version>
+    </dependency>
   </dependencies>
 
   <build>
